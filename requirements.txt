@@ -1,0 +1,8 @@
+streamlit
+groq
+azure-storage-blob
+azure-ai-documentintelligence
+azure-core
+python-dotenv
+Pillow
+PyMuPDF

@@ -1,3 +1,5 @@
+live app:https://drishti-makkar-documind-ai-ai-powered-ocr-and-docume-app-0eujqa.streamlit.app/
+
 # Question Paper AI
 
 Upload question papers (PDF, image, text) and get AI-powered answers, summaries, and document chat.

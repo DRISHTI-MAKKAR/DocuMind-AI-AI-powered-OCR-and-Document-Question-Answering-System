@@ -132,16 +132,17 @@ AZURE_DOC_INTELLIGENCE_KEY = "your_key"
 
 ## Project Structure
 question_paper_solver_fixed/
-├── app.py                        # Main Streamlit app
-├── requirements.txt              # Python dependencies
-├── packages.txt                  # System dependencies
-├── .env.example                  # Environment variable template
-├── .streamlit/
-│   └── secrets.toml.example     # Streamlit Cloud secrets template
+├── app.py
+├── requirements.txt
+├── packages.txt
+├── README.md
+├── .env
+├── .gitignore
 └── utils/
-├── ai.py                     # Groq AI — chat, answer, summarize
-├── extractor.py              # OCR — Tesseract + Azure + PyMuPDF
-└── storage.py                # Azure Blob Storage
+    ├── __init__.py
+    ├── ai.py
+    ├── extractor.py
+    └── storage.py
 
 ---
 

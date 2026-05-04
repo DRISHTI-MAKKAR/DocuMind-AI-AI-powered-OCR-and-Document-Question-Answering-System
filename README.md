@@ -1,15 +1,41 @@
-live app:https://drishti-makkar-documind-ai-ai-powered-ocr-and-docume-app-0eujqa.streamlit.app/
+# DocuMind AI — Question Paper Solver
+Upload question papers (PDF, image, text) and get AI-powered answers, summaries, and document chat — now with **multilingual support for 11 languages**.
 
-# Question Paper AI
+🔗 **Live App**: https://drishti-makkar-documind-ai-ai-powered-ocr-and-docume-app-0eujqa.streamlit.app/
 
-Upload question papers (PDF, image, text) and get AI-powered answers, summaries, and document chat.
+---
+
+## ✨ What's New
+- 🌐 **Multilingual support** — answer questions in 11 languages
+- 🔤 **Multilingual OCR** — extract text from Hindi, Gujarati, Tamil, and more
+- 🗂️ **Language selector** in sidebar — OCR and AI both follow your language choice
+- 📝 **DOCX support** — upload Word documents directly
+
+---
 
 ## Stack
 - **Frontend**: Streamlit
 - **AI**: Groq API (Llama 3.3 70B) — free
 - **Storage**: Azure Blob Storage — free 5GB
-- **OCR**: Azure Document Intelligence — free 500 pages/month
+- **OCR**: Azure Document Intelligence + Tesseract OCR
 - **Hosting**: Streamlit Cloud — free
+
+---
+
+## 🌐 Supported Languages
+| Language | OCR Support | AI Answers |
+|----------|------------|------------|
+| English  | ✅ | ✅ |
+| Hindi    | ✅ | ✅ |
+| Gujarati | ✅ | ✅ |
+| Marathi  | ✅ | ✅ |
+| Tamil    | ✅ | ✅ |
+| Telugu   | ✅ | ✅ |
+| Bengali  | ✅ | ✅ |
+| French   | ✅ | ✅ |
+| Spanish  | ✅ | ✅ |
+| German   | ✅ | ✅ |
+| Arabic   | ✅ | ✅ |
 
 ---
 
@@ -18,36 +44,55 @@ Upload question papers (PDF, image, text) and get AI-powered answers, summaries,
 ### 1. Clone and install
 ```bash
 git clone <your-repo>
-cd qna-app
+cd question_paper_solver_fixed
 pip install -r requirements.txt
 ```
 
-### 2. Set up environment variables
+### 2. Install Tesseract OCR (required for image/scanned PDF support)
+1. Download from: https://github.com/UB-Mannheim/tesseract/wiki
+2. Install to: `C:\Program Files\Tesseract-OCR\`
+3. Download language packs from: https://github.com/tesseract-ocr/tessdata
+4. Place `.traineddata` files in: `C:\Program Files\Tesseract-OCR\tessdata\`
+
+| Language | File |
+|----------|------|
+| Hindi    | `hin.traineddata` |
+| Gujarati | `guj.traineddata` |
+| Marathi  | `mar.traineddata` |
+| Tamil    | `tam.traineddata` |
+| Telugu   | `tel.traineddata` |
+| Bengali  | `ben.traineddata` |
+| French   | `fra.traineddata` |
+| Spanish  | `spa.traineddata` |
+| German   | `deu.traineddata` |
+| Arabic   | `ara.traineddata` |
+
+### 3. Set up environment variables
 ```bash
 cp .env.example .env
 # Edit .env and fill in your keys
 ```
 
-### 3. Get your free API keys
+### 4. Get your free API keys
 
 **Groq API (required)**
 1. Go to https://console.groq.com
 2. Sign up → API Keys → Create new key
-3. Paste into GROQ_API_KEY
+3. Paste into `GROQ_API_KEY`
 
 **Azure Blob Storage (optional — for cloud file storage)**
 1. Azure Portal → Create Storage Account
 2. Go to Access Keys → copy Connection String
-3. Paste into AZURE_STORAGE_CONNECTION_STRING
+3. Paste into `AZURE_STORAGE_CONNECTION_STRING`
 
 **Azure Document Intelligence (optional — for scanned PDFs / images)**
 1. Azure Portal → Create Document Intelligence resource
 2. Go to Keys and Endpoint
-3. Copy Key and Endpoint into the .env
+3. Copy Key and Endpoint into the `.env`
 
-> Without Azure keys, the app still works for digital PDFs and text using PyMuPDF.
+> Without Azure keys, the app still works for digital PDFs and text using PyMuPDF + Tesseract.
 
-### 4. Run locally
+### 5. Run locally
 ```bash
 streamlit run app.py
 ```
@@ -55,7 +100,6 @@ streamlit run app.py
 ---
 
 ## Deploy to Streamlit Cloud (free)
-
 1. Push this project to a GitHub repo
 2. Go to https://streamlit.io/cloud → New app
 3. Connect your GitHub repo, set `app.py` as the main file
@@ -72,13 +116,14 @@ AZURE_DOC_INTELLIGENCE_KEY = "your_key"
 ---
 
 ## Features
-
 | Feature | Description |
-|---|---|
-| 📄 Upload PDF | Upload question paper PDF |
-| 🖼️ Upload Image | Upload scanned paper (requires Azure Doc Intelligence) |
+|---------|-------------|
+| 📄 Upload PDF | Upload digital or scanned question paper PDF |
+| 🖼️ Upload Image | Upload photo of a question paper |
+| 📝 Upload DOCX | Upload Word documents |
 | ✏️ Paste Text | Paste questions directly |
-| ☁️ Azure Storage | Load previously uploaded files |
+| ☁️ Azure Storage | Load previously uploaded files from cloud |
+| 🌐 Language Selector | Choose language for both OCR and AI answers |
 | 💬 Chat | Ask anything about the document |
 | ✅ Answer All | Auto-answer every question in the paper |
 | 📋 Summary | Get subject, type, difficulty summary |
@@ -86,16 +131,3 @@ AZURE_DOC_INTELLIGENCE_KEY = "your_key"
 ---
 
 ## Project Structure
-
-```
-qna-app/
-├── app.py                        # Main Streamlit app
-├── requirements.txt
-├── .env.example                  # Environment variable template
-├── .streamlit/
-│   └── secrets.toml.example     # Streamlit Cloud secrets template
-└── utils/
-    ├── ai.py                     # Groq AI — chat + answer
-    ├── extractor.py              # Azure Doc Intelligence + PyMuPDF
-    └── storage.py                # Azure Blob Storage
-```

@@ -131,3 +131,23 @@ AZURE_DOC_INTELLIGENCE_KEY = "your_key"
 ---
 
 ## Project Structure
+question_paper_solver_fixed/
+├── app.py                        # Main Streamlit app
+├── requirements.txt              # Python dependencies
+├── packages.txt                  # System dependencies
+├── .env.example                  # Environment variable template
+├── .streamlit/
+│   └── secrets.toml.example     # Streamlit Cloud secrets template
+└── utils/
+├── ai.py                     # Groq AI — chat, answer, summarize
+├── extractor.py              # OCR — Tesseract + Azure + PyMuPDF
+└── storage.py                # Azure Blob Storage
+
+---
+
+## How It Works
+1. **Upload** a question paper in any supported format
+2. **Select your language** from the sidebar
+3. The app **extracts text** using Tesseract OCR (with your chosen language) or Azure Document Intelligence
+4. The **AI reads the document** and answers all questions in your selected language
+5. You can also **chat** with the document or get a **summary**

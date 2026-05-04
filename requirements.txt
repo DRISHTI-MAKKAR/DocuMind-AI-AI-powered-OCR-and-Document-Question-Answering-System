@@ -6,3 +6,5 @@ azure-core
 python-dotenv
 Pillow
 PyMuPDF
+pytesseract
+Pillow

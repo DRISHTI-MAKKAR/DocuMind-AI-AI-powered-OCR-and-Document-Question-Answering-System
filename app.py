@@ -1,9 +1,8 @@
 import streamlit as st
 import os
-import uuid
 from dotenv import load_dotenv
 
-from utils.extractor import extract_text_from_file
+from utils.extractor import extract_text_from_file, check_tessdata
 from utils.storage import upload_to_blob, list_blobs, download_blob
 from utils.ai import answer_questions, summarize_document
 
@@ -28,8 +27,10 @@ if "doc_summary" not in st.session_state:
     st.session_state.doc_summary = ""
 if "doc_name" not in st.session_state:
     st.session_state.doc_name = ""
+if "selected_language" not in st.session_state:
+    st.session_state.selected_language = "English"
 
-# ── Sidebar: Input ────────────────────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("📥 Load Document")
 
@@ -43,25 +44,32 @@ with st.sidebar:
         )
         if uploaded and st.button("Extract & Load", type="primary"):
             with st.spinner("Extracting text from document..."):
-                file_bytes = uploaded.read()
-                text = extract_text_from_file(file_bytes, uploaded.name)
-
-                if text.strip():
-                    st.session_state.document_text = text
-                    st.session_state.doc_name = uploaded.name
-                    st.session_state.chat_history = []
-                    st.session_state.doc_summary = ""
-
-                    # Upload to Azure Blob if configured
-                    blob_url = upload_to_blob(file_bytes, uploaded.name)
-                    if blob_url:
-                        st.success(f"✅ Uploaded to Azure Storage")
-                    else:
-                        st.info("ℹ️ Azure Storage not configured — file loaded locally only")
-
-                    st.success(f"✅ Text extracted ({len(text):,} characters)")
+                is_ok, warning_msg = check_tessdata(st.session_state.selected_language)
+                if not is_ok:
+                    st.error(warning_msg)
                 else:
-                    st.error("Could not extract text. Check your Azure Document Intelligence keys.")
+                    file_bytes = uploaded.read()
+                    text = extract_text_from_file(
+                        file_bytes,
+                        uploaded.name,
+                        language=st.session_state.selected_language,
+                    )
+
+                    if text.strip():
+                        st.session_state.document_text = text
+                        st.session_state.doc_name = uploaded.name
+                        st.session_state.chat_history = []
+                        st.session_state.doc_summary = ""
+
+                        blob_url = upload_to_blob(file_bytes, uploaded.name)
+                        if blob_url:
+                            st.success("✅ Uploaded to Azure Storage")
+                        else:
+                            st.info("ℹ️ Azure Storage not configured — file loaded locally only")
+
+                        st.success(f"✅ Text extracted ({len(text):,} characters)")
+                    else:
+                        st.error("Could not extract text. Check your Azure Document Intelligence keys.")
 
     # ── Mode 2: Paste text ──
     elif input_mode == "Paste text":
@@ -89,7 +97,11 @@ with st.sidebar:
                 if st.button("Load from Azure", type="primary"):
                     with st.spinner("Downloading from Azure..."):
                         file_bytes = download_blob(selected)
-                        text = extract_text_from_file(file_bytes, selected)
+                        text = extract_text_from_file(
+                            file_bytes,
+                            selected,
+                            language=st.session_state.selected_language,
+                        )
                         st.session_state.document_text = text
                         st.session_state.doc_name = selected
                         st.session_state.chat_history = []
@@ -97,6 +109,22 @@ with st.sidebar:
                         st.success("✅ Loaded from Azure Storage")
             else:
                 st.info("No files found in Azure Storage yet.")
+
+    st.divider()
+
+    # ── Language selector ──
+    st.subheader("🌐 Response Language")
+    selected_language = st.selectbox(
+        "Answer questions in:",
+        options=[
+            "English", "Hindi", "Gujarati", "Marathi", "Tamil",
+            "Telugu", "Bengali", "French", "Spanish", "German", "Arabic"
+        ],
+        index=["English", "Hindi", "Gujarati", "Marathi", "Tamil",
+               "Telugu", "Bengali", "French", "Spanish", "German", "Arabic"
+               ].index(st.session_state.selected_language),
+    )
+    st.session_state.selected_language = selected_language
 
     st.divider()
 
@@ -130,20 +158,16 @@ with tab1:
     st.subheader("Chat with your document")
     st.caption("Ask anything — 'What is this about?', 'Explain question 3', 'List all topics covered'")
 
-    # Display chat history
     for msg in st.session_state.chat_history:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Chat input
     user_input = st.chat_input("Ask a question about the document...")
 
     if user_input:
-        # Show user message immediately
         with st.chat_message("user"):
             st.markdown(user_input)
 
-        # Get AI response
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
@@ -151,10 +175,10 @@ with tab1:
                         st.session_state.document_text,
                         user_input,
                         st.session_state.chat_history,
+                        language=st.session_state.selected_language,
                     )
                     st.markdown(response)
 
-                    # Save to history
                     st.session_state.chat_history.append({"role": "user", "content": user_input})
                     st.session_state.chat_history.append({"role": "assistant", "content": response})
 
@@ -190,11 +214,11 @@ with tab2:
                 result = answer_questions(
                     st.session_state.document_text,
                     prompt,
-                    [],  # No chat history for bulk answer
+                    [],
+                    language=st.session_state.selected_language,
                 )
                 st.markdown(result)
 
-                # Save to chat history too
                 st.session_state.chat_history.append({"role": "user", "content": prompt})
                 st.session_state.chat_history.append({"role": "assistant", "content": result})
 
@@ -211,7 +235,10 @@ with tab3:
         if st.button("📋 Generate Summary", type="primary"):
             with st.spinner("Summarizing document..."):
                 try:
-                    summary = summarize_document(st.session_state.document_text)
+                    summary = summarize_document(
+                        st.session_state.document_text,
+                        language=st.session_state.selected_language,
+                    )
                     st.session_state.doc_summary = summary
                     st.markdown(summary)
                 except Exception as e:
